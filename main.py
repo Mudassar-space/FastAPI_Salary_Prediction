@@ -1,20 +1,25 @@
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
+from fastapi.responses import JSONResponse
+
 import numpy as np
 import pandas as pd
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, status
 from pydantic import BaseModel
 
 
 class Category(BaseModel):
 
-    experience: int
+    experience: float
 
 
 class ResponsePrediction(BaseModel):
-    experience: int
+    experience: float
     salary: int
 
+class APIResponse(BaseModel):
+    status: bool
+    message: str
 
 df = pd.read_csv("Salary_Data.csv")
 
@@ -34,7 +39,12 @@ model = LinearRegression()
 model.fit(X_train, y_train)
 
 
-@app.post("/Salary prediction/", tags=["prediction"], status_code=201)
+@app.post("/Salary prediction/", status_code=status.HTTP_201_CREATED, response_model=ResponsePrediction, tags=["prediction"])
+                    # responses={status.HTTP_201_CREATED: {"model": ResponsePrediction}})
+                    # status.HTTP_401_UNAUTHORIZED: {"model": APIResponse},
+                    # status.HTTP_404_NOT_FOUND: {"model": APIResponse},
+                    # status.HTTP_400_BAD_REQUEST: {"model": APIResponse},
+                    # status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": APIResponse}})
 def predict_salary(request: Category):
 
     print(type(request), "****************")
